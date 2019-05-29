@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 var size = 8
@@ -135,8 +134,8 @@ func getBestType(chessStructure string, feature map[string]interface{}) (float64
 	if len(chessTypes) == 0 {
 		return 0, errors.New("No type")
 	}
-	fmt.Println(chessStructure)
-	fmt.Println(chessTypes)
+	// fmt.Println(chessStructure)
+	// fmt.Println(chessTypes)
 
 	// chessType := chessTypes[0]
 	chessTypeVal := feature[chessTypes[0]].(float64)
