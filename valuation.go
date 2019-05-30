@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
+	"strings"
 )
 
-var size = 8
+var size = 19
 
-func valuation(checkerboard [][]int8, user int8, feature map[string]interface{}) float64 {
+func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) float64 {
 	val := 0.00
 	// x軸
 	for x := 0; x < size; x++ {
@@ -17,14 +18,14 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, feature); err == nil {
+				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
 			}
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, feature); err == nil {
+			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -40,14 +41,14 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, feature); err == nil {
+				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
 			}
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, feature); err == nil {
+			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -68,7 +69,7 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, feature); err == nil {
+				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
@@ -77,7 +78,7 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			y++
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, feature); err == nil {
+			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -103,7 +104,7 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, feature); err == nil {
+				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
@@ -112,7 +113,7 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 			y++
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, feature); err == nil {
+			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -128,21 +129,32 @@ func valuation(checkerboard [][]int8, user int8, feature map[string]interface{})
 	// fmt.Println(checkerboard[0][0])
 }
 
-func getBestType(chessStructure string, feature map[string]interface{}) (float64, error) {
+func getBestType(chessStructure string, featureTypeList []ChessType) (float64, error) {
 
-	chessTypes := getChessTypes(chessStructure)
-	if len(chessTypes) == 0 {
+	matchType := []ChessType{}
+	for _, chessType := range featureTypeList {
+	matchLoop:
+		for _, structure := range chessType.Structure {
+			matchIndex := strings.Index(chessStructure, structure)
+			if matchIndex != -1 {
+				matchType = append(matchType, chessType)
+				break matchLoop
+			}
+		}
+	}
+
+	if len(matchType) == 0 {
 		return 0, errors.New("No type")
 	}
 	// fmt.Println(chessStructure)
 	// fmt.Println(chessTypes)
 
 	// chessType := chessTypes[0]
-	chessTypeVal := feature[chessTypes[0]].(float64)
-	for index := 1; index < len(chessTypes); index++ {
-		if feature[chessTypes[index]].(float64) > chessTypeVal {
+	chessTypeVal := matchType[0].Val
+	for index := 1; index < len(matchType); index++ {
+		if matchType[index].Val > chessTypeVal {
 			// chessType = chessTypes[index]
-			chessTypeVal = feature[chessTypes[index]].(float64)
+			chessTypeVal = matchType[index].Val
 		}
 	}
 	return chessTypeVal, nil

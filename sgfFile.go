@@ -20,11 +20,11 @@ func openSgf(path string) [][]int8 {
 		checkerboard[i] = make([]int8, size)
 	}
 
-	fmt.Println(sgfString)
+	// fmt.Println(sgfString)
 	commands, vals := resolveText(sgfString)
 
 	for index, command := range commands {
-		fmt.Println(command, index)
+		// fmt.Println(command, index)
 		switch command {
 		case "SZ":
 			if val, err := strconv.Atoi(vals[index]); err == nil {
@@ -42,7 +42,6 @@ func openSgf(path string) [][]int8 {
 			checkerboard[valRunes[0]-97][valRunes[1]-97] = -1
 		}
 	}
-	fmt.Println(checkerboard)
 	return checkerboard
 }
 
@@ -57,8 +56,8 @@ func resolveText(text string) ([]string, []string) {
 	for len(text) > 2 {
 		startIndex := strings.Index(text, "[")
 		endIndex := strings.Index(text, "]")
-		fmt.Println(text)
-		fmt.Println(len(text))
+		// fmt.Println(text)
+		// fmt.Println(len(text))
 		// fmt.Println(startIndex)
 		command := text[0:startIndex]
 		val := text[startIndex+1 : endIndex]
@@ -73,7 +72,23 @@ func resolveText(text string) ([]string, []string) {
 
 		text = text[endIndex+1 : len(text)]
 	}
-	fmt.Println(commands)
-	fmt.Println(vals)
+	// fmt.Println(commands)
+	// fmt.Println(vals)
 	return commands, vals
+}
+
+func printCheckerboard(checkerboard [][]int8) {
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			switch checkerboard[x][y] {
+			case 0:
+				fmt.Print("．")
+			case 1:
+				fmt.Print("Ｘ")
+			case -1:
+				fmt.Print("Ｏ")
+			}
+		}
+		fmt.Print("\n")
+	}
 }
