@@ -11,12 +11,13 @@ func (g *Game) init() {
   `))
 }
 
-func (g *Game) gameJudge(checkerboard [][]int8) int8 {
+func (g *Game) gameJudge(checkerboard [][]int8) int {
+	valuation := Valuation{g.JudgeBot.FeatureTypeList}
 
-	if valuation(checkerboard, 1, g.JudgeBot.FeatureTypeList) > 100000000000 {
+	if valuation.all(checkerboard, 1) > 100000000000 {
 		return 1
 	}
-	if valuation(checkerboard, -1, g.JudgeBot.FeatureTypeList) > 100000000000 {
+	if valuation.all(checkerboard, -1) > 100000000000 {
 		return -1
 	}
 
@@ -32,36 +33,56 @@ func (g *Game) gameJudge(checkerboard [][]int8) int8 {
 	return 2
 }
 
-func (g *Game) start(bot1 Bot, bot2 Bot) int8 {
+func (g *Game) start(bot1 Bot, bot2 Bot) (bot1Win int, bot1Lose int) {
 	checkerboard := openSgf("sixgameTest.sgf")
-	var gameResult int8 = 0
+	bot1Win = 0
+	bot1Lose = 0
 
 	for g.gameJudge(checkerboard) == 0 {
 		checkerboard = bot1.play(checkerboard, -1)
-		printCheckerboard(checkerboard)
+		// printCheckerboard(checkerboard)
 		if g.gameJudge(checkerboard) == 0 {
 			checkerboard = bot2.play(checkerboard, 1)
-			printCheckerboard(checkerboard)
+			// printCheckerboard(checkerboard)
 		}
 	}
-	if g.gameJudge(checkerboard) != 2 {
-		gameResult = gameResult - g.gameJudge(checkerboard)
+	if g.gameJudge(checkerboard) == 1 {
+		bot1Lose += 1
+	} else if g.gameJudge(checkerboard) == -1 {
+		bot1Win += 1
 	}
 
 	checkerboard = openSgf("sixgameTest.sgf")
 
 	for g.gameJudge(checkerboard) == 0 {
 		checkerboard = bot2.play(checkerboard, -1)
-		printCheckerboard(checkerboard)
+		// printCheckerboard(checkerboard)
 		if g.gameJudge(checkerboard) == 0 {
 			checkerboard = bot1.play(checkerboard, 1)
-			printCheckerboard(checkerboard)
+			// printCheckerboard(checkerboard)
 		}
 	}
-	if g.gameJudge(checkerboard) != 2 {
-		gameResult = gameResult + g.gameJudge(checkerboard)
+	if g.gameJudge(checkerboard) == 1 {
+		bot1Win += 1
+	} else if g.gameJudge(checkerboard) == -1 {
+		bot1Lose += 1
 	}
-	message = make(chan string)
-	message <- "ok"
-	return gameResult
+
+	// result <- gameResult
+	return bot1Win, bot1Lose
+}
+
+func (g *Game) competition(bot1 *Bot, bot2 *Bot, mongo Mongo, endChan chan string) {
+	bot1Win, bot1Lose := g.start(*bot1, *bot2)
+	// bot1 = mongo.getBotByName(bot1.Name)
+	bot1.Record.Total += 2
+	bot1.Record.Win += bot1Win
+	bot1.Record.Lose += bot1Lose
+	mongo.updateBot(*bot1)
+	// bot2 = mongo.getBotByName(bot2.Name)
+	bot2.Record.Total += 2
+	bot2.Record.Win += bot1Lose
+	bot2.Record.Lose += bot1Win
+	mongo.updateBot(*bot2)
+	endChan <- "ok"
 }

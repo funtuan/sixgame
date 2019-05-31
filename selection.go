@@ -19,6 +19,7 @@ func (p Points) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func selectionPoints(checkerboard [][]int8, user int8, featureTypeList []ChessType) Points {
 	selectPoint := Points{}
+	valuation := Valuation{featureTypeList}
 	for x := 0; x < size; x++ {
 		for y := 0; y < size; y++ {
 			effective := false
@@ -58,8 +59,8 @@ func selectionPoints(checkerboard [][]int8, user int8, featureTypeList []ChessTy
 			}
 			if effective && checkerboard[x][y] == 0 {
 				checkerboard[x][y] = user
-				selfVal := valuation(checkerboard, user, featureTypeList)
-				oppVal := valuation(checkerboard, user*-1, featureTypeList)
+				selfVal := valuation.all(checkerboard, user)
+				oppVal := valuation.all(checkerboard, user*-1)
 				selectPoint = append(selectPoint, Point{x, y, selfVal - oppVal})
 				checkerboard[x][y] = 0
 			}
@@ -84,7 +85,7 @@ func selectionNode(checkerboard [][]int8, user int8, featureTypeList []ChessType
 			return selectPoint[0].val * -1, Points{selectPoint[0]}
 		}
 	}
-	if selectPoint[0].val > 1000000000 || selectPoint[0].val < -1000000000 {
+	if selectPoint[0].val > 1000000000 || selectPoint[0].val < -1000000000 || len(selectPoint) == 1 {
 		if user == 1 {
 			return selectPoint[0].val, Points{selectPoint[0]}
 		} else {
@@ -129,21 +130,23 @@ func selectionBud(checkerboard [][]int8, user int8, featureTypeList []ChessType)
 	// fmt.Println(selectPoint)
 	var bestVal float64
 	var bestPointRecord Points
-	for b := 0; b < 3; b++ {
-		nodeCheckerboard := make([][]int8, size)
-		for i := range checkerboard {
-			nodeCheckerboard[i] = make([]int8, len(checkerboard[i]))
-			copy(nodeCheckerboard[i], checkerboard[i])
-		}
-		nodeCheckerboard[selectPoint[b].X][selectPoint[b].Y] = user
-		nodeVal, pointRecord := selectionNode(nodeCheckerboard, user, featureTypeList, 3)
-		pointRecord = append(pointRecord, selectPoint[b])
-		if b == 0 {
-			bestVal = nodeVal
-			bestPointRecord = pointRecord
-		} else if bestVal < nodeVal {
-			bestVal = nodeVal
-			bestPointRecord = pointRecord
+	for b := 0; b < 1; b++ {
+		if b < len(selectPoint) {
+			nodeCheckerboard := make([][]int8, size)
+			for i := range checkerboard {
+				nodeCheckerboard[i] = make([]int8, len(checkerboard[i]))
+				copy(nodeCheckerboard[i], checkerboard[i])
+			}
+			nodeCheckerboard[selectPoint[b].X][selectPoint[b].Y] = user
+			nodeVal, pointRecord := selectionNode(nodeCheckerboard, user, featureTypeList, 1)
+			pointRecord = append(pointRecord, selectPoint[b])
+			if b == 0 {
+				bestVal = nodeVal
+				bestPointRecord = pointRecord
+			} else if bestVal < nodeVal {
+				bestVal = nodeVal
+				bestPointRecord = pointRecord
+			}
 		}
 	}
 	return bestPointRecord

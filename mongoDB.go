@@ -9,34 +9,59 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type User struct {
-	Name string `bson:"name"`
-	Age  int    `bson:"age"`
+type Mongo struct {
+	DB      *mgo.Database
+	BotPool *mgo.Collection
 }
 
-func saveBot(bot Bot) {
-	mydb := getDB()
-	mydb.Login("sixgame", "TCfTmXhONIWug0bL")
-	c := mydb.C("botPool")
-	err := c.Insert(&bot)
+func (m *Mongo) login() {
+	m.DB = m.getDB()
+	m.DB.Login("sixgame", "TCfTmXhONIWug0bL")
+	m.BotPool = m.DB.C("botPool")
+}
+
+func (m *Mongo) saveBot(bot Bot) {
+	err := m.BotPool.Insert(&bot)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getBot(name string) Bot {
-	mydb := getDB()
-	mydb.Login("sixgame", "TCfTmXhONIWug0bL")
-	c := mydb.C("botPool")
+func (m *Mongo) getBotByName(name string) Bot {
 	bot := Bot{}
-	err := c.Find(bson.M{"name": name}).One(&bot)
+	err := m.BotPool.Find(bson.M{"name": name}).Sort("-gen").One(&bot)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return bot
 }
 
-func getDB() *mgo.Database {
+func (m *Mongo) getBotsByGen(gen int) []Bot {
+	bots := []Bot{}
+	err := m.BotPool.Find(bson.M{"gen": gen}).Sort("-record.win").All(&bots)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return bots
+}
+
+func (m *Mongo) getMaxGenBot() Bot {
+	bot := Bot{}
+	err := m.BotPool.Find(bson.M{}).Sort("-gen").One(&bot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return bot
+}
+
+func (m *Mongo) updateBot(bot Bot) {
+	err := m.BotPool.Update(bson.M{"name": bot.Name, "gen": bot.Gen}, &bot)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (m *Mongo) getDB() *mgo.Database {
 
 	tlsConfig := &tls.Config{}
 

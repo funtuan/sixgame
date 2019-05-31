@@ -9,6 +9,7 @@ type Bot struct {
 	Name            string
 	FeatureTypeList []ChessType
 	Gen             int
+	Father          []string
 	Record          Record
 }
 

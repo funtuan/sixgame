@@ -7,7 +7,11 @@ import (
 
 var size = 19
 
-func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) float64 {
+type Valuation struct {
+	FeatureTypeList []ChessType
+}
+
+func (v *Valuation) all(checkerboard [][]int8, user int8) float64 {
 	val := 0.00
 	// x軸
 	for x := 0; x < size; x++ {
@@ -18,14 +22,14 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+				if chessTypeVal, err := v.getBestType(temp); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
 			}
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+			if chessTypeVal, err := v.getBestType(temp); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -41,14 +45,14 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+				if chessTypeVal, err := v.getBestType(temp); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
 			}
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+			if chessTypeVal, err := v.getBestType(temp); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -69,7 +73,7 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+				if chessTypeVal, err := v.getBestType(temp); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
@@ -78,7 +82,7 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			y++
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+			if chessTypeVal, err := v.getBestType(temp); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -104,7 +108,7 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			} else if checkerboard[x][y] == user {
 				temp = temp + "A"
 			} else {
-				if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+				if chessTypeVal, err := v.getBestType(temp); err == nil {
 					val += chessTypeVal
 				}
 				temp = ""
@@ -113,7 +117,7 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 			y++
 		}
 		if temp != "" {
-			if chessTypeVal, err := getBestType(temp, featureTypeList); err == nil {
+			if chessTypeVal, err := v.getBestType(temp); err == nil {
 				val += chessTypeVal
 			}
 			temp = ""
@@ -129,10 +133,10 @@ func valuation(checkerboard [][]int8, user int8, featureTypeList []ChessType) fl
 	// fmt.Println(checkerboard[0][0])
 }
 
-func getBestType(chessStructure string, featureTypeList []ChessType) (float64, error) {
+func (v *Valuation) getBestType(chessStructure string) (float64, error) {
 
 	matchType := []ChessType{}
-	for _, chessType := range featureTypeList {
+	for _, chessType := range v.FeatureTypeList {
 	matchLoop:
 		for _, structure := range chessType.Structure {
 			matchIndex := strings.Index(chessStructure, structure)
